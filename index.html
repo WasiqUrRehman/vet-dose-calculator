@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Veterinary Medicine Dose Calculator</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
+    h2 { margin-top: 2em; }
+    label { display: block; margin: 8px 0 2px; }
+    input, select, textarea { width: 250px; padding: 4px; margin-bottom: 10px; }
+    button { padding: 8px 16px; }
+    .section { background: #fff; padding: 16px 24px; margin-bottom: 24px; border-radius: 8px; box-shadow: 0 2px 6px #0001; }
+    .inline { display: inline-block; margin-right: 10px; }
+    .result { font-weight: bold; color: #006600; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Veterinary Medicine Dose Calculator</h1>
+
+  <div class="section">
+    <h2>Add/Edit Medicine</h2>
+    <form id="medicine-form">
+      <label>Medicine Name</label>
+      <input type="text" id="med-name" required>
+
+      <label>Species</label>
+      <select id="med-species">
+        <!-- Options populated by JS -->
+      </select>
+      <input type="text" id="med-species-new" placeholder="Add new species">
+      <button type="button" id="add-species-btn" class="inline">Add Species</button><br>
+
+      <label>Dosage Value</label>
+      <input type="number" id="med-dose-value" min="0" step="any" required>
+
+      <label>Dosage Unit</label>
+      <select id="med-dose-unit">
+        <option value="mg/kg">mg/kg</option>
+        <option value="ml/kg">ml/kg</option>
+      </select>
+
+      <label>Route</label>
+      <input type="text" id="med-route" placeholder="e.g. injection, oral">
+
+      <label>Frequency</label>
+      <input type="text" id="med-frequency" placeholder="e.g. once daily">
+
+      <label>Notes</label>
+      <textarea id="med-notes" rows="2"></textarea>
+
+      <button type="submit">Save Medicine</button>
+    </form>
+  </div>
+
+  <div class="section">
+    <h2>Calculate Dose</h2>
+    <label>Pick Medicine</label>
+    <select id="select-medicine">
+      <option value="">-- Select --</option>
+    </select>
+
+    <div id="picked-medicine-details" style="margin:10px 0;"></div>
+
+    <label>Animal Weight (kg)</label>
+    <input type="number" id="animal-weight" min="0" step="any">
+
+    <button id="calc-dose-btn">Calculate Dose</button>
+    <div class="result" id="dose-result"></div>
+  </div>
+
+  <script>
+    // Local Storage keys
+    const MEDICINE_KEY = 'vet_meds';
+    const SPECIES_KEY = 'vet_species';
+
+    // Default species
+    let speciesList = JSON.parse(localStorage.getItem(SPECIES_KEY)) || ["Dog", "Cat", "Cattle", "Horse"];
+    let medicines = JSON.parse(localStorage.getItem(MEDICINE_KEY)) || [];
+
+    // Populate species dropdown
+    function populateSpeciesDropdown() {
+      const select = document.getElementById('med-species');
+      select.innerHTML = '';
+      speciesList.forEach(s => {
+        let opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = s;
+        select.appendChild(opt);
+      });
+    }
+
+    // Add new species
+    document.getElementById('add-species-btn').onclick = function() {
+      const newSpecies = document.getElementById('med-species-new').value.trim();
+      if (newSpecies && !speciesList.includes(newSpecies)) {
+        speciesList.push(newSpecies);
+        localStorage.setItem(SPECIES_KEY, JSON.stringify(speciesList));
+        populateSpeciesDropdown();
+        document.getElementById('med-species').value = newSpecies;
+        document.getElementById('med-species-new').value = '';
+      }
+    };
+
+    // Save medicine
+    document.getElementById('medicine-form').onsubmit = function(e) {
+      e.preventDefault();
+      const med = {
+        name: document.getElementById('med-name').value.trim(),
+        species: document.getElementById('med-species').value,
+        dosageValue: parseFloat(document.getElementById('med-dose-value').value),
+        dosageUnit: document.getElementById('med-dose-unit').value,
+        route: document.getElementById('med-route').value.trim(),
+        frequency: document.getElementById('med-frequency').value.trim(),
+        notes: document.getElementById('med-notes').value.trim()
+      };
+      // Unique key: name+species+unit+route
+      let idx = medicines.findIndex(m =>
+        m.name === med.name &&
+        m.species === med.species &&
+        m.dosageUnit === med.dosageUnit &&
+        m.route === med.route
+      );
+      if (idx >= 0) medicines[idx] = med;
+      else medicines.push(med);
+
+      localStorage.setItem(MEDICINE_KEY, JSON.stringify(medicines));
+      alert('Medicine saved!');
+      populateMedicineDropdown();
+      this.reset();
+    };
+
+    // Populate medicine dropdown
+    function populateMedicineDropdown() {
+      const select = document.getElementById('select-medicine');
+      select.innerHTML = '<option value="">-- Select --</option>';
+      medicines.forEach((m, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `${m.name} (${m.species}, ${m.dosageValue} ${m.dosageUnit}, ${m.route})`;
+        select.appendChild(opt);
+      });
+    }
+
+    // Show picked medicine details
+    document.getElementById('select-medicine').onchange = function() {
+      const idx = this.value;
+      const details = document.getElementById('picked-medicine-details');
+      if (idx && medicines[idx]) {
+        const m = medicines[idx];
+        details.innerHTML = `
+          <strong>${m.name}</strong> for <em>${m.species}</em><br>
+          Dosage: ${m.dosageValue} ${m.dosageUnit}<br>
+          Route: ${m.route}<br>
+          Frequency: ${m.frequency}<br>
+          Notes: ${m.notes}
+        `;
+      } else {
+        details.innerHTML = '';
+      }
+      document.getElementById('dose-result').textContent = '';
+    };
+
+    // Calculate dose
+    document.getElementById('calc-dose-btn').onclick = function() {
+      const idx = document.getElementById('select-medicine').value;
+      const weight = parseFloat(document.getElementById('animal-weight').value);
+      const resultDiv = document.getElementById('dose-result');
+      if (!idx || !medicines[idx]) {
+        resultDiv.textContent = 'Please select a medicine.';
+        return;
+      }
+      if (!weight || weight <= 0) {
+        resultDiv.textContent = 'Please enter a valid animal weight.';
+        return;
+      }
+      const med = medicines[idx];
+      let dose = med.dosageValue * weight;
+      resultDiv.textContent = `Calculated Dose: ${dose.toFixed(2)} ${med.dosageUnit.replace('/kg', '')}`;
+    };
+
+    // Initial population
+    populateSpeciesDropdown();
+    populateMedicineDropdown();
+  </script>
+</body>
+</html>
