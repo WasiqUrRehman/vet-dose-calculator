@@ -2,69 +2,219 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Veterinary Medicine Dose Calculator</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
-    h2 { margin-top: 2em; }
-    label { display: block; margin: 8px 0 2px; }
-    input, select, textarea { width: 250px; padding: 4px; margin-bottom: 10px; }
-    button { padding: 8px 16px; }
-    .section { background: #fff; padding: 16px 24px; margin-bottom: 24px; border-radius: 8px; box-shadow: 0 2px 6px #0001; }
-    .inline { display: inline-block; margin-right: 10px; }
-    .result { font-weight: bold; color: #006600; margin-top: 10px; }
+    /* Custom styles for better aesthetics and responsiveness */
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6; /* Light gray background */
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 900px;
+      width: 100%;
+      background-color: #ffffff;
+      border-radius: 0.75rem; /* Rounded corners */
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      color: #1f2937; /* Darker text for headings */
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    h2 {
+      color: #374151;
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 0.5rem;
+    }
+    label {
+      display: block;
+      margin-top: 0.75rem;
+      margin-bottom: 0.25rem;
+      font-weight: 500;
+      color: #4b5563;
+    }
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      color: #374151;
+      background-color: #f9fafb;
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #60a5fa; /* Blue focus ring */
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3);
+    }
+    button {
+      padding: 0.6rem 1.2rem;
+      background-color: #3b82f6; /* Blue button */
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    button:hover {
+      background-color: #2563eb; /* Darker blue on hover */
+      transform: translateY(-1px);
+    }
+    button:active {
+      transform: translateY(0);
+    }
+    .result {
+      font-weight: bold;
+      color: #059669; /* Green for results */
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background-color: #ecfdf5; /* Light green background for results */
+      border-radius: 0.5rem;
+      border: 1px solid #a7f3d0;
+    }
+    .message-box {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background-color: #10b981; /* Green for success messages */
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+      font-weight: 500;
+    }
+    .message-box.show {
+      opacity: 1;
+    }
+    /* Responsive adjustments */
+    @media (min-width: 640px) {
+      .container {
+        padding: 2rem;
+      }
+      input, select, textarea {
+        max-width: none; /* Remove fixed width on larger screens */
+      }
+    }
   </style>
 </head>
-<body>
-  <h1>Veterinary Medicine Dose Calculator</h1>
+<body class="flex flex-col items-center p-4 bg-gray-100">
+  <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-6">Veterinary Medicine Dose Calculator</h1>
 
-  <div class="section">
-    <h2>Add/Edit Medicine</h2>
-    <form id="medicine-form">
-      <label>Medicine Name</label>
-      <input type="text" id="med-name" required>
+  <!-- Custom Message Box -->
+  <div id="message-box" class="message-box"></div>
 
-      <label>Species</label>
-      <select id="med-species">
-        <!-- Options populated by JS -->
-      </select>
-      <input type="text" id="med-species-new" placeholder="Add new species">
-      <button type="button" id="add-species-btn" class="inline">Add Species</button><br>
+  <div class="container">
+    <h2 class="text-2xl font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">Add/Edit Medicine</h2>
+    <form id="medicine-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label for="med-name">Medicine Name</label>
+        <input type="text" id="med-name" required class="w-full">
+      </div>
 
-      <label>Dosage Value</label>
-      <input type="number" id="med-dose-value" min="0" step="any" required>
+      <div>
+        <label for="med-species">Species</label>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <select id="med-species" class="flex-grow">
+            <!-- Options populated by JS -->
+          </select>
+          <input type="text" id="med-species-new" placeholder="Add new species" class="flex-grow">
+          <button type="button" id="add-species-btn" class="flex-shrink-0">Add Species</button>
+        </div>
+      </div>
 
-      <label>Dosage Unit</label>
-      <select id="med-dose-unit">
-        <option value="mg/kg">mg/kg</option>
-        <option value="ml/kg">ml/kg</option>
-      </select>
+      <div>
+        <label for="med-dose-value">Dosage Value</label>
+        <input type="number" id="med-dose-value" min="0" step="any" required class="w-full">
+      </div>
 
-      <label>Route</label>
-      <input type="text" id="med-route" placeholder="e.g. injection, oral">
+      <div>
+        <label for="med-dose-unit">Dosage Unit</label>
+        <select id="med-dose-unit" class="w-full">
+          <option value="mg/kg">mg/kg</option>
+          <option value="ml/kg">ml/kg</option>
+        </select>
+      </div>
 
-      <label>Frequency</label>
-      <input type="text" id="med-frequency" placeholder="e.g. once daily">
+      <!-- Removed: Drug in Hand Concentration Value (Saved) and Unit (Saved) -->
 
-      <label>Notes</label>
-      <textarea id="med-notes" rows="2"></textarea>
+      <div>
+        <label for="med-route">Route</label>
+        <input type="text" id="med-route" placeholder="e.g. injection, oral" class="w-full">
+      </div>
 
-      <button type="submit">Save Medicine</button>
+      <div>
+        <label for="med-frequency">Frequency</label>
+        <input type="text" id="med-frequency" placeholder="e.g. once daily" class="w-full">
+      </div>
+
+      <div class="md:col-span-2">
+        <label for="med-notes">Notes</label>
+        <textarea id="med-notes" rows="2" class="w-full"></textarea>
+      </div>
+
+      <div class="md:col-span-2 flex justify-end">
+        <button type="submit" class="mt-4">Save Medicine</button>
+      </div>
     </form>
   </div>
 
-  <div class="section">
-    <h2>Calculate Dose</h2>
-    <label>Pick Medicine</label>
-    <select id="select-medicine">
+  <div class="container">
+    <h2 class="text-2xl font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">Calculate Dose</h2>
+    <label for="select-medicine">Pick Medicine</label>
+    <select id="select-medicine" class="w-full mb-4">
       <option value="">-- Select --</option>
     </select>
 
-    <div id="picked-medicine-details" style="margin:10px 0;"></div>
+    <div id="picked-medicine-details" class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 text-gray-700">
+      <!-- Medicine details will be displayed here -->
+    </div>
 
-    <label>Animal Weight (kg)</label>
-    <input type="number" id="animal-weight" min="0" step="any">
+    <label for="animal-weight">Animal Weight (kg)</label>
+    <input type="number" id="animal-weight" min="0" step="any" class="w-full mb-4">
 
-    <button id="calc-dose-btn">Calculate Dose</button>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label for="calc-concentration-value">Drug in Hand Concentration Value</label>
+        <input type="number" id="calc-concentration-value" min="0" step="any" placeholder="e.g., 100" class="w-full">
+      </div>
+
+      <div>
+        <label for="calc-concentration-unit">Drug in Hand Concentration Unit</label>
+        <select id="calc-concentration-unit" class="w-full">
+          <option value="">-- Select --</option>
+          <option value="mg/ml">mg/ml</option>
+          <option value="g/ml">g/ml</option>
+          <option value="mcg/ml">mcg/ml</option>
+          <!-- Add more units as needed -->
+        </select>
+      </div>
+    </div>
+
+    <button id="calc-dose-btn" class="w-full sm:w-auto mt-4">Calculate Dose</button>
     <div class="result" id="dose-result"></div>
   </div>
 
@@ -75,9 +225,45 @@
 
     // Default species
     let speciesList = JSON.parse(localStorage.getItem(SPECIES_KEY)) || ["Dog", "Cat", "Cattle", "Horse"];
+    // Initialize medicines, ensuring no old concentration data is carried over if it existed
     let medicines = JSON.parse(localStorage.getItem(MEDICINE_KEY)) || [];
+    // Clean up old concentration properties from existing medicines if they were saved previously
+    medicines = medicines.map(med => {
+        const newMed = { ...med };
+        delete newMed.drugConcentrationValue;
+        delete newMed.drugConcentrationUnit;
+        return newMed;
+    });
+    localStorage.setItem(MEDICINE_KEY, JSON.stringify(medicines)); // Save the cleaned data back
 
-    // Populate species dropdown
+
+    // --- Utility Functions ---
+
+    /**
+     * Displays a temporary message box.
+     * @param {string} message - The message to display.
+     * @param {string} type - 'success' or 'error' to change background color.
+     */
+    function showMessageBox(message, type = 'success') {
+      const msgBox = document.getElementById('message-box');
+      msgBox.textContent = message;
+      msgBox.classList.remove('bg-red-500', 'bg-green-500'); // Clean previous types
+      if (type === 'error') {
+        msgBox.classList.add('bg-red-500');
+      } else {
+        msgBox.classList.add('bg-green-500');
+      }
+      msgBox.classList.add('show');
+      setTimeout(() => {
+        msgBox.classList.remove('show');
+      }, 3000); // Message disappears after 3 seconds
+    }
+
+    // --- Populate Dropdowns ---
+
+    /**
+     * Populates the species dropdown with current speciesList.
+     */
     function populateSpeciesDropdown() {
       const select = document.getElementById('med-species');
       select.innerHTML = '';
@@ -89,98 +275,173 @@
       });
     }
 
-    // Add new species
-    document.getElementById('add-species-btn').onclick = function() {
-      const newSpecies = document.getElementById('med-species-new').value.trim();
-      if (newSpecies && !speciesList.includes(newSpecies)) {
-        speciesList.push(newSpecies);
-        localStorage.setItem(SPECIES_KEY, JSON.stringify(speciesList));
-        populateSpeciesDropdown();
-        document.getElementById('med-species').value = newSpecies;
-        document.getElementById('med-species-new').value = '';
-      }
-    };
-
-    // Save medicine
-    document.getElementById('medicine-form').onsubmit = function(e) {
-      e.preventDefault();
-      const med = {
-        name: document.getElementById('med-name').value.trim(),
-        species: document.getElementById('med-species').value,
-        dosageValue: parseFloat(document.getElementById('med-dose-value').value),
-        dosageUnit: document.getElementById('med-dose-unit').value,
-        route: document.getElementById('med-route').value.trim(),
-        frequency: document.getElementById('med-frequency').value.trim(),
-        notes: document.getElementById('med-notes').value.trim()
-      };
-      // Unique key: name+species+unit+route
-      let idx = medicines.findIndex(m =>
-        m.name === med.name &&
-        m.species === med.species &&
-        m.dosageUnit === med.dosageUnit &&
-        m.route === med.route
-      );
-      if (idx >= 0) medicines[idx] = med;
-      else medicines.push(med);
-
-      localStorage.setItem(MEDICINE_KEY, JSON.stringify(medicines));
-      alert('Medicine saved!');
-      populateMedicineDropdown();
-      this.reset();
-    };
-
-    // Populate medicine dropdown
+    /**
+     * Populates the medicine selection dropdown.
+     */
     function populateMedicineDropdown() {
       const select = document.getElementById('select-medicine');
       select.innerHTML = '<option value="">-- Select --</option>';
       medicines.forEach((m, i) => {
         const opt = document.createElement('option');
         opt.value = i;
-        opt.textContent = `${m.name} (${m.species}, ${m.dosageValue} ${m.dosageUnit}, ${m.route})`;
+        // Display medicine name, species, and dosage
+        opt.textContent = `${m.name} (${m.species}, ${m.dosageValue} ${m.dosageUnit})`;
         select.appendChild(opt);
       });
     }
 
-    // Show picked medicine details
+    // --- Event Listeners ---
+
+    // Add new species button handler
+    document.getElementById('add-species-btn').onclick = function() {
+      const newSpeciesInput = document.getElementById('med-species-new');
+      const newSpecies = newSpeciesInput.value.trim();
+      if (newSpecies) {
+        if (!speciesList.includes(newSpecies)) {
+          speciesList.push(newSpecies);
+          localStorage.setItem(SPECIES_KEY, JSON.stringify(speciesList));
+          populateSpeciesDropdown();
+          document.getElementById('med-species').value = newSpecies; // Select the newly added species
+          newSpeciesInput.value = ''; // Clear the input field
+          showMessageBox(`Species "${newSpecies}" added successfully!`);
+        } else {
+          showMessageBox(`Species "${newSpecies}" already exists.`, 'error');
+        }
+      } else {
+        showMessageBox('Please enter a species name.', 'error');
+      }
+    };
+
+    // Save medicine form submission handler
+    document.getElementById('medicine-form').onsubmit = function(e) {
+      e.preventDefault(); // Prevent default form submission
+
+      const med = {
+        name: document.getElementById('med-name').value.trim(),
+        species: document.getElementById('med-species').value,
+        dosageValue: parseFloat(document.getElementById('med-dose-value').value),
+        dosageUnit: document.getElementById('med-dose-unit').value,
+        // Removed drugConcentrationValue and drugConcentrationUnit from here
+        route: document.getElementById('med-route').value.trim(),
+        frequency: document.getElementById('med-frequency').value.trim(),
+        notes: document.getElementById('med-notes').value.trim()
+      };
+
+      // Validate required fields
+      if (!med.name || isNaN(med.dosageValue) || med.dosageValue <= 0) {
+        showMessageBox('Please fill in all required medicine details (Name, Dosage Value).', 'error');
+        return;
+      }
+
+      // Find if medicine already exists (for updating)
+      let idx = medicines.findIndex(m =>
+        m.name === med.name &&
+        m.species === med.species &&
+        m.dosageUnit === med.dosageUnit &&
+        m.route === med.route
+      );
+
+      if (idx >= 0) {
+        medicines[idx] = med; // Update existing medicine
+        showMessageBox('Medicine updated successfully!');
+      } else {
+        medicines.push(med); // Add new medicine
+        showMessageBox('Medicine saved successfully!');
+      }
+
+      localStorage.setItem(MEDICINE_KEY, JSON.stringify(medicines));
+      populateMedicineDropdown(); // Refresh the medicine dropdown
+      this.reset(); // Clear the form
+    };
+
+    // Show picked medicine details on selection change
     document.getElementById('select-medicine').onchange = function() {
       const idx = this.value;
       const details = document.getElementById('picked-medicine-details');
-      if (idx && medicines[idx]) {
+      details.innerHTML = ''; // Clear previous details
+      document.getElementById('calc-concentration-value').value = ''; // Clear override fields
+      document.getElementById('calc-concentration-unit').value = '';
+
+      if (idx !== "" && medicines[idx]) {
         const m = medicines[idx];
+        // Removed concentration display from here as it's no longer saved with the medicine
         details.innerHTML = `
-          <strong>${m.name}</strong> for <em>${m.species}</em><br>
-          Dosage: ${m.dosageValue} ${m.dosageUnit}<br>
-          Route: ${m.route}<br>
-          Frequency: ${m.frequency}<br>
-          Notes: ${m.notes}
+          <h3 class="text-lg font-bold text-gray-800 mb-2">${m.name}</h3>
+          <span class="font-semibold">Species:</span> ${m.species}<br>
+          <span class="font-semibold">Dosage:</span> ${m.dosageValue} ${m.dosageUnit}<br>
+          <span class="font-semibold">Route:</span> ${m.route || 'N/A'}<br>
+          <span class="font-semibold">Frequency:</span> ${m.frequency || 'N/A'}<br>
+          <span class="font-semibold">Notes:</span> ${m.notes || 'N/A'}
         `;
-      } else {
-        details.innerHTML = '';
       }
-      document.getElementById('dose-result').textContent = '';
+      document.getElementById('dose-result').textContent = ''; // Clear previous calculation result
     };
 
-    // Calculate dose
+    // Calculate dose button handler
     document.getElementById('calc-dose-btn').onclick = function() {
       const idx = document.getElementById('select-medicine').value;
       const weight = parseFloat(document.getElementById('animal-weight').value);
       const resultDiv = document.getElementById('dose-result');
-      if (!idx || !medicines[idx]) {
-        resultDiv.textContent = 'Please select a medicine.';
+      resultDiv.innerHTML = ''; // Clear previous results
+
+      // Get concentration values from the calculation section
+      const concentrationValue = parseFloat(document.getElementById('calc-concentration-value').value);
+      const concentrationUnit = document.getElementById('calc-concentration-unit').value;
+
+      if (idx === "" || !medicines[idx]) {
+        showMessageBox('Please select a medicine.', 'error');
         return;
       }
-      if (!weight || weight <= 0) {
-        resultDiv.textContent = 'Please enter a valid animal weight.';
+      if (isNaN(weight) || weight <= 0) {
+        showMessageBox('Please enter a valid animal weight (greater than 0).', 'error');
         return;
       }
+
       const med = medicines[idx];
-      let dose = med.dosageValue * weight;
-      resultDiv.textContent = `Calculated Dose: ${dose.toFixed(2)} ${med.dosageUnit.replace('/kg', '')}`;
+      let totalDose = 0;
+      let resultText = '';
+
+      // Check if concentration is provided for calculation
+      if (isNaN(concentrationValue) || concentrationValue <= 0 || !concentrationUnit) {
+          resultText += `<span class="text-red-600">Warning: Drug concentration not provided. Volume to administer cannot be calculated.</span><br>`;
+      } else {
+          resultText += `<span class="text-blue-600 font-semibold">Using Drug in Hand Concentration: ${concentrationValue} ${concentrationUnit}</span><br>`;
+      }
+
+
+      // Calculate total dose based on dosage unit
+      if (med.dosageUnit === 'mg/kg') {
+        totalDose = med.dosageValue * weight; // Total dose in mg
+        resultText += `Total Dose: <span class="text-blue-700">${totalDose.toFixed(3)} mg</span><br>`;
+        resultText += `Dose per kg: <span class="text-blue-700">${med.dosageValue.toFixed(3)} mg/kg</span><br>`;
+
+        // If concentration is available and compatible, calculate volume to administer
+        if (!isNaN(concentrationValue) && concentrationValue > 0 && concentrationUnit === 'mg/ml') {
+          const volumeToAdminister = totalDose / concentrationValue; // Volume in ml
+          resultText += `Volume to Administer: <span class="text-blue-700">${volumeToAdminister.toFixed(3)} ml</span><br>`;
+        } else if (!isNaN(concentrationValue) && concentrationValue > 0 && concentrationUnit !== 'mg/ml') {
+            resultText += `<span class="text-red-600">Warning: Cannot calculate volume. Concentration unit (${concentrationUnit}) is not compatible with dosage unit (mg/kg).</span><br>`;
+        }
+
+      } else if (med.dosageUnit === 'ml/kg') {
+        totalDose = med.dosageValue * weight; // Total dose in ml
+        resultText += `Total Dose: <span class="text-blue-700">${totalDose.toFixed(3)} ml</span><br>`;
+        resultText += `Dose per kg: <span class="text-blue-700">${med.dosageValue.toFixed(3)} ml/kg</span><br>`;
+
+        // For ml/kg, drug concentration is less commonly used for calculating final volume,
+        // as the dose is already in volume units. However, we can still display it if present.
+        if (!isNaN(concentrationValue) && concentrationValue > 0 && concentrationUnit) {
+            resultText += `<span class="text-gray-600">Drug in Hand Concentration: ${concentrationValue} ${concentrationUnit} (Note: Dose is already in ml/kg)</span><br>`;
+        }
+      }
+
+      resultDiv.innerHTML = resultText;
     };
 
-    // Initial population
+    // --- Initializations ---
     populateSpeciesDropdown();
     populateMedicineDropdown();
   </script>
 </body>
 </html>
+
